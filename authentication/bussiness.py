@@ -11,7 +11,7 @@ from authentication.serializers import AuthUserSerializer, UserProfileSerializer
 from authentication.token import get_token_for_user
 from utils.email_service import send_email
 from utils.enums import RespCode
-from utils.id import id_generator, get_anonymous_username
+from utils.id import id_generator
 from utils.verify import current_user
 
 
@@ -72,8 +72,8 @@ def login_by_email_code(request, email, code):
             }
             return RespCode.CREATED.value, resp
         # 如果查不到这个用户，则创建一个用户
-        # 匿名用户的默认密码是anonymous
-        user = AuthUser.objects.create_anonymous_user(username=get_anonymous_username(), password='anonymous', email=email)
+        # 匿名用户的默认密码是anonymous todo：默认密码应该随机生成!
+        user = AuthUser.objects.create_anonymous_user(username=email, password='anonymous', email=email)
         resp = save_user(request, user)
         return RespCode.CREATED.value, resp
 
@@ -107,7 +107,7 @@ def register_by_email(request, email, verify_code, password):
 def login_by_email(request, email, password):
     user = AuthUser.objects.filter(username=email).first()
     if not user:
-        return RespCode.BAD_REQUEST.value, '该账号不存在'
+        return RespCode.NOT_FOUND.value, '该账号不存在'
     # if user.login_status == LoginStatusType.LOGGING:
     #     return RespCode.BAD_REQUEST.value, '该账号已登录，请不要重复操作'
     verify = check_password(password, user.password)
@@ -117,7 +117,7 @@ def login_by_email(request, email, password):
     return RespCode.BAD_REQUEST.value, '账号或密码错误'
 
 
-def reset_pwd_by_email(request, email, password, verify_code):
+def reset_pwd_by_email(request, email, password, verify_code, repeat):
     user = current_user(request)
     if not user:
         return RespCode.BAD_REQUEST.value, '该账号不存在'
@@ -126,11 +126,12 @@ def reset_pwd_by_email(request, email, password, verify_code):
     cache_code = cache.get(key)
     if cache_code and json.loads(cache_code) == code:
         cache.delete(key)
+        if password != repeat:
+            return RespCode.BAD_REQUEST.value, '两次输入密码不一致'
         new_password = make_password(password)
         user.password = new_password
         user.save()
         # 修改密码后会自动退出登录!
-        # user.login_status = LoginStatusType.NOT_LOGIN
         return RespCode.CREATED.value, {}
     return RespCode.BAD_REQUEST.value, '验证码错误'
 
@@ -172,16 +173,3 @@ def update_user_info(request, nickname, avatar, sex, age):
         user.profile.save()
     return RespCode.CREATED.value, {}
 
-
-def get_user_list(request):
-    user = current_user(request)
-    if not user:
-        return RespCode.BAD_REQUEST.value, '该账号不存在'
-    if not any([user.is_superuser, user.is_staff]):
-        return RespCode.FORBIDDEN.value, '该账号没有权限访问'
-    qs = AuthUser.objects.filter(is_staff=False, is_superuser=False, is_active=True).all()
-    if not qs:
-        return RespCode.NO_CONTENT.value, {}, []
-    fields = ('id', 'username', 'email', 'profile')
-    user_data = AuthUserSerializer(qs, fields=fields, many=True).data
-    return RespCode.OK.value, user_data

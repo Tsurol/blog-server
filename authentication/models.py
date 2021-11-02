@@ -17,7 +17,7 @@ class AuthUserManager(BaseUserManager):
             user.set_password(password)
             user.save(using=self._db)
             profile = UserProfile.objects.create(user=user, username=user.username)
-            profile.nickname = profile.get_nickname
+            profile.nickname = profile.get_anonymous_username
             profile.save()
             UserAsset.objects.create(user=user, coins=Constants.INIT_COINS.value, username=user.username)
         return user
@@ -30,7 +30,6 @@ class AuthUserManager(BaseUserManager):
     def create_anonymous_user(self, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
-        extra_fields.setdefault('is_active', False)
         return self._create_user(password, **extra_fields)
 
     def create_superuser(self, password, **extra_fields):
@@ -98,9 +97,9 @@ class UserProfile(models.Model):
         return self.username
 
     @property
-    def get_nickname(self):
+    def get_anonymous_username(self):
         random_num = id_generator(7)
-        return '{}{}'.format('用户', random_num)
+        return '{}{}'.format('匿名用户', random_num)
 
 
 class LoginRecord(models.Model):

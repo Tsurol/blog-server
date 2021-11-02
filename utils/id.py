@@ -11,11 +11,6 @@ def uid_gen():
     return uuid1().hex
 
 
-def get_anonymous_username():
-    random_num = id_generator(7)
-    return '{}{}'.format('匿名用户', random_num)
-
-
 if __name__ == '__main__':
     # test
     print(uid_gen())

@@ -19,6 +19,7 @@ class Blog(CommonModel):
     content = MDTextField()
     is_top = models.BooleanField('置顶', default=False)
     is_hot = models.BooleanField('热门博客', default=False)
+    bkc = models.CharField('背景颜色', max_length=32, null=True, default='#adb5bd', blank=True)
     user = models.ForeignKey(verbose_name='关联用户', to=AuthUser, on_delete=models.CASCADE,
                              related_name='blog_list')
 
@@ -29,16 +30,19 @@ class Blog(CommonModel):
         ordering = ['id']
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
 
 class Comment(CommonModel):
     content = models.TextField('评论内容')
     is_top = models.BooleanField('置顶', default=False)
-    love_count = models.IntegerField('点赞', default=0)
     reply = models.ForeignKey(verbose_name='评论的回复', to='self', blank=True, null=True,
                               related_name='comment_reply',
                               on_delete=models.CASCADE)
+    user = models.ForeignKey(verbose_name='关联用户', to=AuthUser, on_delete=models.CASCADE,
+                             related_name='user_comment_list')
+    blog = models.ForeignKey(verbose_name='关联博客', to=Blog, on_delete=models.CASCADE,
+                             related_name='blog_comment_list')
 
     class Meta:
         verbose_name = '评论'
@@ -46,4 +50,19 @@ class Comment(CommonModel):
         db_table = 'blog_comment'
 
     def __str__(self):
-        return self.id
+        return str(self.id)
+
+
+class Tag(CommonModel):
+    name = models.CharField('标签名称', max_length=32)
+    bkc = models.CharField('背景色', max_length=32, default='#7fd5ea')
+    blog = models.ForeignKey(verbose_name='关联博客', to=Blog, on_delete=models.CASCADE,
+                             related_name='blog_tag_list')
+
+    class Meta:
+        verbose_name = '标签'
+        verbose_name_plural = '标签'
+        db_table = 'blog_Tag'
+
+    def __str__(self):
+        return str(self.name)
