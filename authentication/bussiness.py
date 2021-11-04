@@ -1,5 +1,7 @@
 import json
 import re
+import time
+
 from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
@@ -54,7 +56,9 @@ def send_verify_code(email):
 
 
 def login_by_email_code(request, email, code):
-    user = AuthUser.objects.filter(email=email).first()
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return RespCode.BAD_REQUEST.value, "Email地址不合法"
+    user = AuthUser.objects.filter(email=email, is_active=True).first()
     code = code.upper()
     key = 'verify_code_email:{}'.format(email)
     cache_code = cache.get(key)
@@ -72,16 +76,18 @@ def login_by_email_code(request, email, code):
             }
             return RespCode.CREATED.value, resp
         # 如果查不到这个用户，则创建一个用户
-        # 匿名用户的默认密码是anonymous todo：默认密码应该随机生成!
-        user = AuthUser.objects.create_anonymous_user(username=email, password='anonymous', email=email)
+        # 匿名用户的默认用户名是发验证码的邮箱，默认密码是anonymous+时间戳后5位
+        timestamp = str(time.time())[-5:]
+        password = 'anonymous{}'.format(timestamp)
+        user = AuthUser.objects.create_anonymous_user(username=email, password=password, email=email)
         resp = save_user(request, user)
         return RespCode.CREATED.value, resp
 
     return RespCode.BAD_REQUEST.value, '邮箱或验证码有误'
 
 
-def register_by_email(request, email, verify_code, password):
-    if not email or not verify_code or not password:
+def register_by_email(request, email, verify_code, password, username):
+    if not email or not verify_code or not password or not username:
         return RespCode.BAD_REQUEST.value, '请求参数错误'
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return RespCode.BAD_REQUEST.value, "Email地址不合法"
@@ -89,23 +95,30 @@ def register_by_email(request, email, verify_code, password):
         return RespCode.BAD_REQUEST.value, '密码过长'
     if len(password) < 4:
         return RespCode.BAD_REQUEST.value, '密码过短'
+    if len(username) < 1:
+        return RespCode.BAD_REQUEST.value, '用户名过短'
+    if len(username) > 20:
+        return RespCode.BAD_REQUEST.value, '用户名过长'
     is_email_exists = AuthUser.objects.filter(email=email).first()
+    is_username_exists = AuthUser.objects.filter(username=username).first()
     if is_email_exists:
         return RespCode.BAD_REQUEST.value, '邮箱已存在'
+    if is_username_exists:
+        return RespCode.BAD_REQUEST.value, '用户名已存在'
     verify_code = verify_code.upper()
     key = 'verify_code_email:{}'.format(email)
     cache_code = cache.get(key)
     if cache_code and json.loads(cache_code) == verify_code:
         cache.delete(key)
         # 用户名默认为注册时的邮箱
-        user = AuthUser.objects.create_user(username=email, email=email, password=password)
+        user = AuthUser.objects.create_user(username=username, email=email, password=password)
         resp = save_user(request, user)
         return RespCode.CREATED.value, resp
     return RespCode.BAD_REQUEST.value, '验证码错误'
 
 
-def login_by_email(request, email, password):
-    user = AuthUser.objects.filter(username=email).first()
+def login_by_username(request, username, password):
+    user = AuthUser.objects.filter(username=username, is_active=True).first()
     if not user:
         return RespCode.NOT_FOUND.value, '该账号不存在'
     # if user.login_status == LoginStatusType.LOGGING:
@@ -118,6 +131,8 @@ def login_by_email(request, email, password):
 
 
 def reset_pwd_by_email(request, email, password, verify_code, repeat):
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return RespCode.BAD_REQUEST.value, "Email地址不合法"
     user = current_user(request)
     if not user:
         return RespCode.BAD_REQUEST.value, '该账号不存在'
@@ -131,7 +146,7 @@ def reset_pwd_by_email(request, email, password, verify_code, repeat):
         new_password = make_password(password)
         user.password = new_password
         user.save()
-        # 修改密码后会自动退出登录!
+        # 修改密码后自动退出登录!->前端清除jwt
         return RespCode.CREATED.value, {}
     return RespCode.BAD_REQUEST.value, '验证码错误'
 
@@ -172,4 +187,3 @@ def update_user_info(request, nickname, avatar, sex, age):
         user.profile.updated_at = timezone.now()
         user.profile.save()
     return RespCode.CREATED.value, {}
-

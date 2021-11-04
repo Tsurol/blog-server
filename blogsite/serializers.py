@@ -8,6 +8,7 @@ class BlogSerializer(CustomFieldsSerializer):
     created_at = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
+    love_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Blog
@@ -26,6 +27,10 @@ class BlogSerializer(CustomFieldsSerializer):
     def get_comment_count(self, obj):
         """ 获取博客下的评论数量 """
         return obj.blog_comment_list.filter(is_valid=True).count()
+
+    def get_love_count(self, obj):
+        """ 获取博客下的点赞数量 """
+        return obj.blog_love_list.filter(is_valid=True).count()
 
 
 class TagSerializer(CustomFieldsSerializer):

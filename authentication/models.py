@@ -17,7 +17,7 @@ class AuthUserManager(BaseUserManager):
             user.set_password(password)
             user.save(using=self._db)
             profile = UserProfile.objects.create(user=user, username=user.username)
-            profile.nickname = profile.get_anonymous_username
+            profile.nickname = profile.get_anonymous_nickname
             profile.save()
             UserAsset.objects.create(user=user, coins=Constants.INIT_COINS.value, username=user.username)
         return user
@@ -97,7 +97,7 @@ class UserProfile(models.Model):
         return self.username
 
     @property
-    def get_anonymous_username(self):
+    def get_anonymous_nickname(self):
         random_num = id_generator(7)
         return '{}{}'.format('匿名用户', random_num)
 

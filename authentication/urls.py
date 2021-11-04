@@ -8,7 +8,7 @@ from authentication import views
 urlpatterns = [
     re_path(r'^email/code/', views.SendEmailCodeView.as_view()),
     re_path(r'^email/register/', views.EmailRegisterView.as_view()),
-    re_path(r'^email/login/', views.LoginByEmailView.as_view()),
+    re_path(r'^username/login/', views.LoginByUsernameView.as_view()),
     re_path(r'^code/login/', views.LoginByEmailCodeView.as_view()),
     re_path(r'^email/reset/', views.ResetPasswordByEmailView.as_view()),
     re_path(r'^user/info/', views.UserInfoView.as_view()),

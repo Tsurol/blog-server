@@ -1,7 +1,7 @@
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from authentication.bussiness import send_verify_code, register_by_email, login_by_email, reset_pwd_by_email, \
+from authentication.bussiness import send_verify_code, register_by_email, login_by_username, reset_pwd_by_email, \
     get_user_info, update_user_info, login_by_email_code
 from utils.enums import RespCode
 from utils.response import reformat_resp
@@ -47,10 +47,11 @@ class EmailRegisterView(APIView):
 
     def post(self, request):
         try:
+            username = request.data.get('username', None)
             email = request.data.get('email', None)
             verify_code = request.data.get('verify_code', None)
             password = request.data.get('password', None)
-            code, resp = register_by_email(request, email, verify_code, password)
+            code, resp = register_by_email(request, email, verify_code, password, username)
             if code == RespCode.CREATED.value:
                 return reformat_resp(code, resp, 'Succeed')
             else:
@@ -60,14 +61,14 @@ class EmailRegisterView(APIView):
         return reformat_resp(RespCode.INTERNAL_SERVER_ERROR.value, {}, 'Internal Server Error')
 
 
-class LoginByEmailView(APIView):
+class LoginByUsernameView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         try:
-            email = request.data.get('email', None)
+            username = request.data.get('username', None)
             password = request.data.get('password', None)
-            code, resp = login_by_email(request, email, password)
+            code, resp = login_by_username(request, username, password)
             if code == RespCode.CREATED.value:
                 return reformat_resp(code, resp, 'Succeed')
             else:

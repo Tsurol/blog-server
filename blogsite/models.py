@@ -66,3 +66,20 @@ class Tag(CommonModel):
 
     def __str__(self):
         return str(self.name)
+
+
+class Love(models.Model):
+    user = models.ForeignKey(verbose_name='关联用户', to=AuthUser, on_delete=models.CASCADE,
+                             related_name='user_love_list')
+    blog = models.ForeignKey(verbose_name='关联博客', to=Blog, on_delete=models.CASCADE,
+                             related_name='blog_love_list')
+    is_valid = models.BooleanField('逻辑删除', default=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '点赞'
+        verbose_name_plural = '点赞'
+        db_table = 'blog_Love'
+
+    def __str__(self):
+        return str(self.id)
