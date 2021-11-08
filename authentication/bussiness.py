@@ -157,7 +157,7 @@ def get_user_info(request):
         return RespCode.BAD_REQUEST.value, '该账号不存在'
     if not user.profile.is_valid:
         return RespCode.BAD_REQUEST.value, '用户个人信息已被删除'
-    fields = ('user', 'username', 'nickname', 'avatar', 'sex', 'age')
+    fields = ('user', 'username', 'nickname', 'avatar', 'sex', 'age', 'coins')
     user_profile_data = UserProfileSerializer(user.profile, fields=fields).data
     return RespCode.OK.value, user_profile_data
 

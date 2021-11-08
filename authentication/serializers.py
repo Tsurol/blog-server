@@ -6,9 +6,15 @@ from blog.serializers import CustomFieldsSerializer
 
 
 class UserProfileSerializer(CustomFieldsSerializer):
+    coins = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = UserProfile
         fields = '__all__'
+
+    def get_coins(self, obj):
+        """ 用户资产（鲨币） """
+        return obj.user.asset.coins
 
 
 class AuthUserSerializer(CustomFieldsSerializer):

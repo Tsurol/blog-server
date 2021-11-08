@@ -79,8 +79,8 @@ class AuthUser(AbstractUser):
 class UserProfile(models.Model):
     username = models.CharField('用户名', max_length=150, editable=False, default=None)
     nickname = models.CharField('昵称', max_length=255, default=None, null=True, blank=True)
-    avatar = models.ImageField('头像', max_length=256, default='avatar/default_avatar.jpg', null=True, blank=True,
-                               upload_to='avatar/%Y%m')
+    avatar = models.ImageField('头像', max_length=256, default='static/default_avatar.jpg', null=True, blank=True,
+                               upload_to='userAvatar/%Y%m')
     sex = models.SmallIntegerField('性别', default=SexType.MAN, choices=SexType.choices)
     age = models.SmallIntegerField('年龄', default=0)
     is_valid = models.BooleanField('逻辑删除', default=True)
@@ -121,7 +121,7 @@ class LoginRecord(models.Model):
 
 class UserAsset(models.Model):
     username = models.CharField('用户名', max_length=150, editable=False, default=None)
-    coins = models.IntegerField("账户鲨币", default=0)
+    coins = models.FloatField("账户鲨币", default=0.0)
     updated_at = models.DateTimeField('修改时间', auto_now=True)
     user = models.OneToOneField(verbose_name='关联用户', to=AuthUser, on_delete=models.CASCADE, related_name='asset')
     is_valid = models.BooleanField('逻辑删除', default=True)
