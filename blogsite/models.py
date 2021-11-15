@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from mdeditor.fields import MDTextField
 
@@ -23,6 +25,7 @@ class Blog(CommonModel):
     img = models.ImageField('图片地址', max_length=256, upload_to='blogImg/%Y%m', null=True, blank=True, default=None)
     user = models.ForeignKey(verbose_name='关联用户', to=AuthUser, on_delete=models.CASCADE,
                              related_name='blog_list')
+    love = GenericRelation(to='LoveRelated', verbose_name='关联点赞表')
 
     class Meta:
         verbose_name = '博客'
@@ -41,9 +44,11 @@ class Comment(CommonModel):
                               related_name='comment_reply',
                               on_delete=models.CASCADE)
     user = models.ForeignKey(verbose_name='关联用户', to=AuthUser, on_delete=models.CASCADE,
-                             related_name='user_comment_list')
+                             related_name='user_comment_list', null=True, blank=True)
+    temporary = models.CharField('临时用户名', max_length=32, null=True, blank=True)
     blog = models.ForeignKey(verbose_name='关联博客', to=Blog, on_delete=models.CASCADE,
                              related_name='blog_comment_list')
+    love = GenericRelation(to='LoveRelated', verbose_name='关联点赞表')
 
     class Meta:
         verbose_name = '评论'
@@ -69,18 +74,20 @@ class Tag(CommonModel):
         return str(self.name)
 
 
-class Love(models.Model):
+class LoveRelated(models.Model):
     user = models.ForeignKey(verbose_name='关联用户', to=AuthUser, on_delete=models.CASCADE,
                              related_name='user_love_list')
-    blog = models.ForeignKey(verbose_name='关联博客', to=Blog, on_delete=models.CASCADE,
-                             related_name='blog_love_list')
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, verbose_name='关联的模型')
+    object_id = models.PositiveIntegerField('具体对象id')
+    content_object = GenericForeignKey('content_type', 'object_id')
+
     is_valid = models.BooleanField('逻辑删除', default=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
 
     class Meta:
         verbose_name = '点赞'
         verbose_name_plural = '点赞'
-        db_table = 'blog_Love'
+        db_table = 'Love_related'
 
     def __str__(self):
         return str(self.id)

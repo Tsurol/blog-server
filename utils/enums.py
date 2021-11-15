@@ -28,3 +28,7 @@ class RespCode(IntEnum):
 
 class Constants(IntEnum):
     INIT_COINS = 10
+    ORDER_BY_CREATED = 1
+    ORDER_BY_IS_TOP = 2
+    APP_MODEL_BLOG = 15
+    APP_MODEL_COMMENT = 14
