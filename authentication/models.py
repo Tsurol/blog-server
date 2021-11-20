@@ -3,7 +3,7 @@ from django.contrib.auth.models import PermissionsMixin, AbstractUser
 from django.db import models, transaction
 from django.contrib.auth.models import AnonymousUser
 from authentication.choice import SexType
-from utils.enums import Constants
+from utils.enums import Constants, VUE_HOST
 from utils.id import id_generator, uid_gen
 
 
@@ -79,10 +79,13 @@ class AuthUser(AbstractUser):
 class UserProfile(models.Model):
     username = models.CharField('用户名', max_length=150, editable=False, default=None)
     nickname = models.CharField('昵称', max_length=255, default=None, null=True, blank=True)
-    avatar = models.ImageField('头像', max_length=256, default='static/default_avatar.jpg', null=True, blank=True,
-                               upload_to='userAvatar/%Y%m')
+    # avatar = models.CharField('头像', max_length=256, default=VUE_HOST + 'static/default_avatar.jpg', null=True,
+    #                           blank=True)
+    avatar = models.ImageField('头像地址', max_length=300, null=True, blank=True, upload_to='avatar/%Y/%m/%d',
+                               default='avatar/default_avatar.jpg')
     sex = models.SmallIntegerField('性别', default=SexType.MAN, choices=SexType.choices)
     age = models.SmallIntegerField('年龄', default=0)
+    words = models.CharField('个性签名', max_length=64, null=True, blank=True, default='他很懒，什么也没留下')
     is_valid = models.BooleanField('逻辑删除', default=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('修改时间', auto_now=True)
@@ -94,12 +97,12 @@ class UserProfile(models.Model):
         db_table = 'auth_user_profile'
 
     def __str__(self):
-        return self.username
+        return self.avatar
 
     @property
     def get_anonymous_nickname(self):
-        random_num = id_generator(7)
-        return '{}{}'.format('匿名用户', random_num)
+        random_num = id_generator(4)
+        return '{}{}'.format('路过的小可爱', random_num)
 
 
 class LoginRecord(models.Model):

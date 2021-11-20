@@ -23,7 +23,7 @@ def send_email(to_email: str, verify_code: str):
     :return:
     """
     # 邮件主题
-    subject = "[zzl Blog] Please check your email code"
+    subject = "[zzl's Blog] Please check your email code"
     mail_msg = MIMEMultipart()
     content = '您的邮箱验证码为：{} \n Please don`t report this email \n ---  {}  ---'.format(verify_code, PROJECT_NAME)
     mail_msg.attach(MIMEText(content, 'plain', 'utf-8'))
@@ -44,6 +44,28 @@ def send_email(to_email: str, verify_code: str):
         print(e)
         return {}
     return status.HTTP_201_CREATED
+
+
+def start_send_mail(message):
+    mail_msg = MIMEMultipart()
+    mail_msg['Subject'] = Header('尊敬的周梓凌，请注意查收用户的反馈', 'utf-8')
+    mail_msg['From'] = sender_email
+    toaddrs = ['zzlzzl996@126.com']
+    mail_msg['To'] = ','.join(toaddrs)
+    mail_msg.attach(MIMEText(message, 'plain', 'utf-8'))
+    try:
+        # 开启发信服务，这里使用的是加密传输
+        server = smtplib.SMTP_SSL(smtp_server)
+        server.connect(smtp_server, port)
+        # 登录发信邮箱
+        server.login(sender_email, sender_passwd)
+        # 发送邮件
+        server.sendmail(sender_email, mail_msg['To'], mail_msg.as_string())
+        # 关闭服务器
+        server.quit()
+    except Exception as e:
+        print(e)
+        print("Error: unable to send email")
 
 
 if __name__ == '__main__':

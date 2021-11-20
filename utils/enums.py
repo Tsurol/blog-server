@@ -32,3 +32,8 @@ class Constants(IntEnum):
     ORDER_BY_IS_TOP = 2
     APP_MODEL_BLOG = 15
     APP_MODEL_COMMENT = 14
+    # todo 部署需要修改
+
+
+# todo 部署需要修改
+VUE_HOST = 'http://localhost:8080/'

@@ -1,8 +1,16 @@
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.views import APIView
+import os
 
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
+
+from blog import settings
+from blog.settings import MEDIA_ROOT
 from blogsite.bussiness import get_blog_list, get_tag_list, get_blog_by_tag, comment_count, get_blog_detail, \
-    get_blog_comment, love_obj, post_blog_comment
+    get_blog_comment, love_obj, post_blog_comment, get_blog_author, get_comment_reply, get_random_blog, post_advice, \
+    create_blog
 from utils.enums import RespCode
 from utils.response import reformat_resp
 
@@ -112,7 +120,7 @@ class BlogCommentView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        """ 获取评论(包括回复)列表 """
+        """ 获取评论列表 """
         try:
             blog_id = request.query_params.get('blog_id', None)
             is_reorder = request.query_params.get('order', None)
@@ -135,6 +143,97 @@ class BlogCommentView(APIView):
             # 临时用户的名称(前端传入)
             temporary = request.data.get('temporary', None)
             code, resp = post_blog_comment(request, temporary, blog_id, reply_id, content)
+            if code == RespCode.CREATED.value:
+                return reformat_resp(code, resp, 'Succeed')
+            else:
+                return reformat_resp(code, {}, resp)
+        except Exception as e:
+            print(e)
+        return reformat_resp(RespCode.INTERNAL_SERVER_ERROR.value, {}, 'Internal Server Error')
+
+
+class CommentReplyView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """ 获取评论的回复列表 """
+        try:
+            blog_id = request.query_params.get('blog_id', None)
+            code, resp = get_comment_reply(blog_id)
+            if code == RespCode.OK.value:
+                return reformat_resp(code, resp, 'Succeed')
+            else:
+                return reformat_resp(code, {}, resp)
+        except Exception as e:
+            print(e)
+        return reformat_resp(RespCode.INTERNAL_SERVER_ERROR.value, {}, 'Internal Server Error')
+
+
+class AuthorInfoView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """ 获取博客的作者信息 """
+        try:
+            blog_id = request.query_params.get('blog_id', None)
+            code, resp = get_blog_author(blog_id)
+            if code == RespCode.OK.value:
+                return reformat_resp(code, resp, 'Succeed')
+            else:
+                return reformat_resp(code, {}, resp)
+        except Exception as e:
+            print(e)
+        return reformat_resp(RespCode.INTERNAL_SERVER_ERROR.value, {}, 'Internal Server Error')
+
+
+class RandomBlogView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """ 获取相关博客信息"""
+        try:
+            code, resp = get_random_blog()
+            if code == RespCode.OK.value:
+                return reformat_resp(code, resp, 'Succeed')
+            else:
+                return reformat_resp(code, {}, resp)
+        except Exception as e:
+            print(e)
+        return reformat_resp(RespCode.INTERNAL_SERVER_ERROR.value, {}, 'Internal Server Error')
+
+
+class AdviceView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            name = request.data.get('name', '')
+            mobile = request.data.get('mobile', '')
+            advice = request.data.get('advice', '')
+            code, resp = post_advice(name, mobile, advice)
+            if code == RespCode.CREATED.value:
+                return reformat_resp(code, resp, 'Succeed')
+            else:
+                return reformat_resp(code, {}, resp)
+        except Exception as e:
+            print(e)
+        return reformat_resp(RespCode.INTERNAL_SERVER_ERROR.value, {}, 'Internal Server Error')
+
+
+class CreateBlogView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            title = request.data.get('title', None)
+            desc = request.data.get('desc', None)
+            category = request.data.get('category', None)
+            origin = request.data.get('origin', None)
+            # 获取前端传递的数组
+            tags = request.data.getlist('tags')
+            content = request.data.get('content', None)
+            file = request.FILES.get('file', None)
+            code, resp = create_blog(request, title, desc, category, origin, content, file, tags)
             if code == RespCode.CREATED.value:
                 return reformat_resp(code, resp, 'Succeed')
             else:
