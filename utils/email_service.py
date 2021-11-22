@@ -1,29 +1,32 @@
 # coding:utf-8
 
 import smtplib
+import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.header import Header
 
 from rest_framework import status
 
-sender_email = '2656155887@qq.com'
-sender_passwd = 'uqmcpadgribcebib'
+# sender_email = '2656155887@qq.com'
+# sender_passwd = 'uqmcpadgribcebib'
+sender_email = 'zzlzzl1243@163.com'
+sender_passwd = 'ITKQBFDPRGLBLSZH'
 # 发信服务器,端口号
-smtp_server = 'smtp.qq.com'
+# smtp_server = 'smtp.qq.com'
+smtp_server = 'smtp.163.com'
 port = 465
 PROJECT_NAME = "zzl Blog"
 
 
 def send_email(to_email: str, verify_code: str):
     """
-
     :param to_email: 收件邮箱
     :param verify_code: 验证码
     :return:
     """
     # 邮件主题
-    subject = "[zzl's Blog] Please check your email code"
+    subject = "[周梓凌的个人网站】请查收您的短信登录验证码"
     mail_msg = MIMEMultipart()
     content = '您的邮箱验证码为：{} \n Please don`t report this email \n ---  {}  ---'.format(verify_code, PROJECT_NAME)
     mail_msg.attach(MIMEText(content, 'plain', 'utf-8'))
@@ -70,5 +73,8 @@ def start_send_mail(message):
 
 if __name__ == '__main__':
     # Test代码
+    start = time.time()
     send_email(to_email='zzlzzl996@126.com', verify_code='5555')
+    print(time.time()-start)
+    # start_send_mail(message='312312')
     print('ok')

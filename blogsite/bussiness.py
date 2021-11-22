@@ -136,16 +136,8 @@ def get_blog_comment(blog_id, is_reorder):
         blog_qs = Blog.objects.get(pk=blog_id, is_valid=True)
         if not blog_qs:
             return RespCode.NOT_FOUND.value, '该博客不存在'
-        comment_qs = Comment.objects.filter(is_valid=True, blog=blog_qs, reply_id__isnull=True).all()
-        # todo: 排序暂不实现
-        if is_reorder == str(Constants.ORDER_BY_CREATED.value):
-            # 最新评论，按时间排序
-            comment_qs = Comment.objects.filter(is_valid=True, blog=blog_qs, reply_id__isnull=True).all().order_by(
-                '-created_at')[:5]
-        elif is_reorder == str(Constants.ORDER_BY_IS_TOP.value):
-            # 按is_top排序
-            comment_qs = Comment.objects.filter(is_valid=True, blog=blog_qs, reply_id__isnull=True).all().order_by(
-                '-is_top')
+        comment_qs = Comment.objects.filter(is_valid=True, blog=blog_qs, reply_id__isnull=True).order_by(
+            '-created_at').all()
         if not comment_qs:
             return RespCode.NOT_FOUND.value, '暂无评论'
         fields = (
@@ -156,8 +148,8 @@ def get_blog_comment(blog_id, is_reorder):
             'comment_count': len(comment_all_qs) if comment_all_qs else 0
         }
         return RespCode.OK.value, resp
-    comment_all_blog = Comment.objects.filter(is_valid=True, reply_id__isnull=True).all()
     if is_reorder == str(Constants.ORDER_BY_CREATED.value):
+        comment_all_blog = Comment.objects.filter(is_valid=True, reply_id__isnull=True).all()
         # 最新评论，按时间排序
         comment_all_blog = comment_all_blog.order_by(
             '-created_at')[:5]
@@ -173,27 +165,38 @@ def get_blog_comment(blog_id, is_reorder):
 
 
 def post_blog_comment(request, temporary, blog_id, reply_id, content):
-    user = current_user(request)
-    if not user:
-        # 临时用户(仅可以评论)
-        if blog_id:
-            if reply_id:
-                # 是一条回复,匿名用户的评论和回复
-                Comment.objects.create(content=content, reply_id=reply_id,
-                                       blog_id=blog_id, temporary=temporary)
-                return RespCode.CREATED.value, {}
-            # 是一条评论
-            Comment.objects.create(content=content, blog_id=blog_id, temporary=temporary)
-            return RespCode.CREATED.value, {}
-        return RespCode.BAD_REQUEST.value, '请求参数错误'
+    # user = current_user(request)
+    # if not user:
+    #     # 临时用户(仅可以评论)
+    #     if blog_id:
+    #         if reply_id:
+    #             # 是一条回复,匿名用户的评论和回复
+    #             Comment.objects.create(content=content, reply_id=reply_id,
+    #                                    blog_id=blog_id, temporary=temporary)
+    #             return RespCode.CREATED.value, {}
+    #         # 是一条评论
+    #         Comment.objects.create(content=content, blog_id=blog_id, temporary=temporary)
+    #         return RespCode.CREATED.value, {}
+    #     return RespCode.BAD_REQUEST.value, '请求参数错误'
     # 正式用户,可以评论
     if blog_id:
         if reply_id:
-            Comment.objects.create(content=content, reply_id=reply_id, blog_id=blog_id, user=user)
+            # 是一条回复,匿名用户的评论和回复
+            Comment.objects.create(content=content, reply_id=reply_id,
+                                   blog_id=blog_id, temporary=temporary)
             return RespCode.CREATED.value, {}
-        Comment.objects.create(content=content, blog_id=blog_id, user=user)
+        # 是一条评论
+        Comment.objects.create(content=content, blog_id=blog_id, temporary=temporary)
         return RespCode.CREATED.value, {}
     return RespCode.BAD_REQUEST.value, '请求参数错误'
+
+    # if blog_id:
+    #     if reply_id:
+    #         Comment.objects.create(content=content, reply_id=reply_id, blog_id=blog_id, user=user)
+    #         return RespCode.CREATED.value, {}
+    #     Comment.objects.create(content=content, blog_id=blog_id, user=user)
+    #     return RespCode.CREATED.value, {}
+    # return RespCode.BAD_REQUEST.value, '请求参数错误'
 
 
 def get_comment_reply(blog_id):
@@ -230,7 +233,6 @@ def get_blog_author(blog_id):
 
 def get_random_blog():
     random_blog = random.sample(list(Blog.objects.filter(is_valid=True).all()), 5)
-    print(random_blog)
     resp = {
         'data': BlogSerializer(random_blog, many=True).data,
     }

@@ -24,7 +24,7 @@ class BlogListView(APIView):
             is_hot = request.query_params.get('is_hot', None)
             is_top = request.query_params.get('is_top', None)
             current_page = int(request.query_params.get('page', 1))
-            page_size = int(request.query_params.get('limit', 5))
+            page_size = int(request.query_params.get('limit', 8))
             code, resp = get_blog_list(request, is_hot, is_top, search, current_page, page_size)
             if code == RespCode.OK.value:
                 return reformat_resp(code, resp, 'Succeed')

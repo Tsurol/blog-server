@@ -1,3 +1,5 @@
+import random
+
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin, AbstractUser
 from django.db import models, transaction
@@ -101,8 +103,11 @@ class UserProfile(models.Model):
 
     @property
     def get_anonymous_nickname(self):
-        random_num = id_generator(4)
-        return '{}{}'.format('路过的小可爱', random_num)
+        # random_num = id_generator(4)
+        # return '{}{}'.format('路过的小可爱', random_num)
+        random_num = id_generator(5)
+        random_nickname = random.choice(['宋兵甲', '炮灰乙', '流氓丙', '土匪丁', '马贼戊'])
+        return '{}{}'.format(random_nickname, random_num)
 
 
 class LoginRecord(models.Model):

@@ -124,8 +124,8 @@ class BlogCommentSerializer(CustomFieldsSerializer):
         """ 获取临时用户的临时头像 """
         if not obj.temporary:
             return None
-        # todo 部署时需要更改
-        return VUE_HOST + 'static/default_avatar.jpg'
+        # todo 部署时需要更改 临时头像
+        return "http://127.0.0.1:8000/media/avatar/default_avatar.jpg"
 
     def get_reply(self, obj):
         # 获取评论下的回复
@@ -135,7 +135,7 @@ class BlogCommentSerializer(CustomFieldsSerializer):
             reply_list.append({
                 'id': item.id,
                 # todo 部署时需要更改
-                'avatar': VUE_HOST + 'static/default_avatar.jpg' if item.temporary else item.user.profile.avatar,
+                'avatar': "http://127.0.0.1:8000/media/avatar/default_avatar.jpg" if item.temporary else item.user.profile.avatar,
                 'nickname': item.temporary if item.temporary else item.user.profile.nickname,
                 'content': item.content,
                 'created_at': item.format_created_at

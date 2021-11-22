@@ -133,9 +133,9 @@ def login_by_username(request, username, password):
 def reset_pwd_by_email(request, email, password, verify_code, repeat):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return RespCode.BAD_REQUEST.value, "Email地址不合法"
-    user = current_user(request)
+    user = AuthUser.objects.filter(email=email).first()
     if not user:
-        return RespCode.BAD_REQUEST.value, '该账号不存在'
+        return RespCode.NOT_FOUND.value, '该账号不存在'
     code = verify_code.upper()
     key = 'verify_code_email:{}'.format(email)
     cache_code = cache.get(key)
@@ -146,7 +146,7 @@ def reset_pwd_by_email(request, email, password, verify_code, repeat):
         new_password = make_password(password)
         user.password = new_password
         user.save()
-        # 修改密码后自动退出登录!->前端清除jwt
+        # 修改密码后自动退出登录!->前端清除jwt.
         return RespCode.CREATED.value, {}
     return RespCode.BAD_REQUEST.value, '验证码错误'
 
