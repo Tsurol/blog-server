@@ -181,14 +181,18 @@ def post_blog_comment(request, temporary, blog_id, reply_id, content):
     # 正式用户,可以评论
     if blog_id:
         if reply_id:
+            if not all([temporary, content]):
+                return RespCode.BAD_REQUEST.value, '请填写您的昵称和评论内容'
             # 是一条回复,匿名用户的评论和回复
             Comment.objects.create(content=content, reply_id=reply_id,
                                    blog_id=blog_id, temporary=temporary)
             return RespCode.CREATED.value, {}
         # 是一条评论
+        if not all([temporary, content]):
+            return RespCode.BAD_REQUEST.value, '请填写您的昵称和评论内容'
         Comment.objects.create(content=content, blog_id=blog_id, temporary=temporary)
         return RespCode.CREATED.value, {}
-    return RespCode.BAD_REQUEST.value, '请求参数错误'
+    return RespCode.BAD_REQUEST.value, '缺失请求参数'
 
     # if blog_id:
     #     if reply_id:
@@ -247,9 +251,8 @@ def post_advice(name, mobile, advice):
         客户名: {name} \n
         手机号: {mobile} \n
         需求描述: {advice} \n
-        查看详情: http://www.zzlzzl.fun/
         \n\n\n\n
-        copyright © zzlzzl.fun｜周梓凌的个人网站
+        copyright © xxxxxx｜周梓凌的个人网站
         """.format(name=name, mobile=mobile, advice=advice)
         start_send_mail(msg)
         return RespCode.CREATED.value, {}

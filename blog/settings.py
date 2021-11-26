@@ -147,7 +147,9 @@ LANGUAGES = (
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# todo: 部署需更改
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # 'F:\\blog\\static' bad
+STATICFILES_DIRS = [BASE_DIR / "static", ]  # 'F:/blog/static' good
 STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
