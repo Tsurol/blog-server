@@ -37,7 +37,7 @@ def get_blog_by_tag(request, tag_id):
         tag_qs = Tag.objects.get(id=tag_id)
         if not tag_qs:
             return RespCode.NOT_FOUND.value, '标签不存在'
-        blog_qs = tag_qs.blog.all()
+        blog_qs = tag_qs.blog.filter(is_valid=True).all()
         if not blog_qs:
             return RespCode.NOT_FOUND.value, '该标签对应的博客不存在'
         page_obj = MyPagination()
